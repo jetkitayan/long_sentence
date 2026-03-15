@@ -13,7 +13,6 @@
       color: #222;
       line-height: 1.5;
     }
-
     header {
       position: sticky;
       top: 0;
@@ -22,12 +21,10 @@
       border-bottom: 1px solid #e5e7eb;
       padding: 12px 16px;
     }
-
     header h1 {
       margin: 0;
       font-size: 20px;
     }
-
     main {
       max-width: 960px;
       margin: 0 auto;
@@ -35,43 +32,36 @@
       display: grid;
       gap: 16px;
     }
-
     .card {
       background: #fff;
       border: 1px solid #e5e7eb;
       border-radius: 14px;
       padding: 16px;
     }
-
     .card h2 {
       margin: 0 0 12px;
       font-size: 18px;
     }
-
     .grid {
       display: grid;
       gap: 12px;
     }
-
     .grid-2 {
       display: grid;
       gap: 12px;
       grid-template-columns: 1fr 1fr;
     }
-
     .grid-3 {
       display: grid;
       gap: 12px;
       grid-template-columns: repeat(3, 1fr);
     }
-
     label {
       display: block;
       font-size: 14px;
       margin-bottom: 6px;
       font-weight: 600;
     }
-
     input[type="text"],
     input[type="number"],
     input[type="password"],
@@ -84,12 +74,10 @@
       font-size: 16px;
       background: #fff;
     }
-
     textarea {
       min-height: 120px;
       resize: vertical;
     }
-
     button {
       border: 1px solid #cfd5dd;
       background: #fff;
@@ -98,26 +86,21 @@
       font-size: 15px;
       cursor: pointer;
     }
-
     button:hover {
       background: #f3f4f6;
     }
-
     .row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
-
     .muted {
       color: #666;
       font-size: 14px;
     }
-
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
-
     .output-box {
       white-space: pre-wrap;
       word-break: break-word;
@@ -127,51 +110,50 @@
       padding: 14px;
       min-height: 120px;
     }
-
     .stat {
       border: 1px solid #e5e7eb;
       border-radius: 12px;
       padding: 12px;
       background: #fafafa;
     }
-
     .stat-title {
       font-size: 13px;
       color: #666;
       margin-bottom: 4px;
     }
-
     .stat-value {
       font-size: 22px;
       font-weight: 700;
     }
-
     .list {
       display: grid;
       gap: 8px;
     }
-
     .list-item {
       border: 1px solid #e5e7eb;
       border-radius: 10px;
       padding: 10px 12px;
       background: #fafafa;
     }
-
     .error {
       color: #b00020;
       font-weight: 600;
     }
-
     .success {
       color: #0a7a35;
       font-weight: 600;
     }
-
     .hidden {
       display: none !important;
     }
-
+    #authArea {
+      background: #fff8e1;
+      border: 1px solid #f0d98c;
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
     @media (max-width: 720px) {
       .grid-2, .grid-3 {
         grid-template-columns: 1fr;
@@ -185,11 +167,14 @@
   </header>
 
   <main>
-    <div id="authArea">
-      <input id="basicUserInput" placeholder="Basic User">
-      <input id="basicPassInput" type="password" placeholder="Basic Pass">
+    <div id="authArea" class="hidden">
+      <div class="muted">最初の1回だけ Basic 認証情報を入力してください。</div>
+      <input id="basicUserInput" type="text" placeholder="Basic User" />
+      <input id="basicPassInput" type="password" placeholder="Basic Pass" />
       <button id="saveAuthBtn">保存</button>
+      <div id="authMsg" class="muted"></div>
     </div>
+
     <section class="card">
       <h2>文章登録</h2>
       <div class="grid">
@@ -215,6 +200,7 @@
         <div class="row">
           <button id="createTextBtn">登録</button>
           <button id="loadTextsBtn">一覧を再取得</button>
+          <button id="loadStatsBtn">統計を再取得</button>
         </div>
 
         <div id="createMsg" class="muted"></div>
@@ -243,11 +229,6 @@
             <div class="stat-title">計測状態</div>
             <div id="readingState" class="stat-value" style="font-size:18px;">未開始</div>
           </div>
-        </div>
-
-        <div>
-          <label>タイトル</label>
-          <div id="displayTitle" class="output-box"></div>
         </div>
 
         <div>
@@ -300,47 +281,32 @@
   </main>
 
   <script>
+    const API_BASE = "https://memo-save-api.jetkitayan.workers.dev";
+    const BASIC_USER_KEY = "read_timer_basic_user";
+    const BASIC_PASS_KEY = "read_timer_basic_pass";
+
+    let BASIC_USER = localStorage.getItem(BASIC_USER_KEY) || "";
+    let BASIC_PASS = localStorage.getItem(BASIC_PASS_KEY) || "";
+
     const authArea = document.getElementById("authArea");
     const userInput = document.getElementById("basicUserInput");
     const passInput = document.getElementById("basicPassInput");
-    const saveBtn = document.getElementById("saveAuthBtn");
-    
-    if (BASIC_USER && BASIC_PASS) {
-      authArea.style.display = "none";
-    }
-    
-    saveBtn.onclick = () => {
-      BASIC_USER = userInput.value.trim();
-      BASIC_PASS = passInput.value.trim();
-    
-      localStorage.setItem("basic_user", BASIC_USER);
-      localStorage.setItem("basic_pass", BASIC_PASS);
-    
-      authArea.style.display = "none";
-    };
-        
-    const STORAGE_KEY = "read_timer_config_v1";
+    const saveAuthBtn = document.getElementById("saveAuthBtn");
+    const authMsg = document.getElementById("authMsg");
 
     const el = {
-      apiBase: document.getElementById("apiBase"),
-      basicUser: document.getElementById("basicUser"),
-      basicPass: document.getElementById("basicPass"),
-      saveConfigBtn: document.getElementById("saveConfigBtn"),
-      loadStatsBtn: document.getElementById("loadStatsBtn"),
-      configMsg: document.getElementById("configMsg"),
-
       kind: document.getElementById("kind"),
       sourceTextIdWrap: document.getElementById("sourceTextIdWrap"),
       sourceTextId: document.getElementById("sourceTextId"),
       content: document.getElementById("content"),
       createTextBtn: document.getElementById("createTextBtn"),
       loadTextsBtn: document.getElementById("loadTextsBtn"),
+      loadStatsBtn: document.getElementById("loadStatsBtn"),
       createMsg: document.getElementById("createMsg"),
 
       currentTextId: document.getElementById("currentTextId"),
       currentTextKind: document.getElementById("currentTextKind"),
       readingState: document.getElementById("readingState"),
-      displayTitle: document.getElementById("displayTitle"),
       displayContent: document.getElementById("displayContent"),
       doneBtn: document.getElementById("doneBtn"),
       readingMsg: document.getElementById("readingMsg"),
@@ -382,32 +348,12 @@
       return d.toLocaleString("ja-JP");
     }
 
-    const API_BASE = "https://memo-save-api.jetkitayan.workers.dev";
-    
     function getConfig() {
       return {
         apiBase: API_BASE,
-        basicUser: el.basicUser.value,
-        basicPass: el.basicPass.value,
+        basicUser: BASIC_USER,
+        basicPass: BASIC_PASS,
       };
-    }
-
-    function saveConfig() {
-      const cfg = getConfig();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-      el.configMsg.textContent = "設定を保存しました。";
-      el.configMsg.className = "success";
-    }
-
-    function loadConfig() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const cfg = JSON.parse(raw);
-        el.apiBase.value = cfg.apiBase || "";
-        el.basicUser.value = cfg.basicUser || "";
-        el.basicPass.value = cfg.basicPass || "";
-      } catch {}
     }
 
     function authHeader() {
@@ -416,9 +362,13 @@
     }
 
     async function apiFetch(path, options = {}) {
-      const { apiBase } = getConfig();
+      const { apiBase, basicUser, basicPass } = getConfig();
+
       if (!apiBase) {
-        throw new Error("API Base URL を入力してください");
+        throw new Error("API Base URL が未設定です");
+      }
+      if (!basicUser || !basicPass) {
+        throw new Error("Basic認証情報を保存してください");
       }
 
       const headers = {
@@ -463,7 +413,6 @@
       state.startedAt = null;
       el.currentTextId.textContent = "-";
       el.currentTextKind.textContent = "-";
-      el.displayTitle.textContent = "";
       el.displayContent.textContent = "";
       el.readingState.textContent = "未開始";
       el.doneBtn.disabled = true;
@@ -506,18 +455,16 @@
 
       try {
         const data = await apiFetch(`/api/read-timer/texts/random?kind=${encodeURIComponent(kind)}`);
-
         const item = data.text;
+
         state.currentText = item;
         state.startedAt = new Date().toISOString();
 
         el.currentTextId.textContent = item?.id ?? "-";
         el.currentTextKind.textContent = item?.kind ?? "-";
-        el.displayTitle.textContent = item?.title || "(タイトルなし)";
         el.displayContent.textContent = item?.content || "";
         el.readingState.textContent = "計測中";
         el.doneBtn.disabled = false;
-
         el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
       } catch (err) {
         resetCurrentDisplay();
@@ -574,16 +521,14 @@
           return;
         }
 
-        el.recent3List.innerHTML = recent3.map(item => {
-          return `
-            <div class="list-item">
-              <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
-              <div><strong>text_id:</strong> <span class="mono">${escapeHtml(item.text_id)}</span></div>
-              <div><strong>時間:</strong> ${escapeHtml(formatMs(item.elapsed_ms))}</div>
-              <div><strong>保存日時:</strong> ${escapeHtml(formatDateTime(item.created_at))}</div>
-            </div>
-          `;
-        }).join("");
+        el.recent3List.innerHTML = recent3.map(item => `
+          <div class="list-item">
+            <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
+            <div><strong>text_id:</strong> <span class="mono">${escapeHtml(item.text_id)}</span></div>
+            <div><strong>時間:</strong> ${escapeHtml(formatMs(item.elapsed_ms))}</div>
+            <div><strong>保存日時:</strong> ${escapeHtml(formatDateTime(item.created_at))}</div>
+          </div>
+        `).join("");
       } catch (err) {
         el.recent3List.innerHTML = `<div class="error">統計取得失敗: ${escapeHtml(err.message)}</div>`;
       }
@@ -602,20 +547,18 @@
           return;
         }
 
-        el.textsList.innerHTML = texts.map(item => {
-          return `
-            <div class="list-item">
-              <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
-              <div><strong>種別:</strong> ${escapeHtml(item.kind)}</div>
-              <div><strong>抜粋元本文ID:</strong> ${escapeHtml(item.source_text_id ?? "-")}</div>
-              <div><strong>内容:</strong><br>${escapeHtml(item.content || "")}</div>
-              <div class="muted" style="margin-top:6px;">
-                作成: ${escapeHtml(formatDateTime(item.created_at))}<br>
-                更新: ${escapeHtml(formatDateTime(item.updated_at))}
-              </div>
+        el.textsList.innerHTML = texts.map(item => `
+          <div class="list-item">
+            <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
+            <div><strong>種別:</strong> ${escapeHtml(item.kind)}</div>
+            <div><strong>抜粋元本文ID:</strong> ${escapeHtml(item.source_text_id ?? "-")}</div>
+            <div><strong>内容:</strong><br>${escapeHtml(item.content || "")}</div>
+            <div class="muted" style="margin-top:6px;">
+              作成: ${escapeHtml(formatDateTime(item.created_at))}<br>
+              更新: ${escapeHtml(formatDateTime(item.updated_at))}
             </div>
-          `;
-        }).join("");
+          </div>
+        `).join("");
       } catch (err) {
         el.textsList.innerHTML = `<div class="error">一覧取得失敗: ${escapeHtml(err.message)}</div>`;
       }
@@ -623,36 +566,54 @@
 
     function bindEvents() {
       el.kind.addEventListener("change", updateKindUI);
-      el.saveConfigBtn.addEventListener("click", saveConfig);
       el.createTextBtn.addEventListener("click", createText);
       el.doneBtn.addEventListener("click", finishReading);
       el.loadStatsBtn.addEventListener("click", loadStats);
       el.loadTextsBtn.addEventListener("click", () => loadTexts(state.currentListKind));
 
       document.querySelectorAll("[data-random-kind]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          randomText(btn.dataset.randomKind);
-        });
+        btn.addEventListener("click", () => randomText(btn.dataset.randomKind));
       });
 
       document.querySelectorAll("[data-list-kind]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          loadTexts(btn.dataset.listKind);
-        });
+        btn.addEventListener("click", () => loadTexts(btn.dataset.listKind));
+      });
+
+      saveAuthBtn.addEventListener("click", async () => {
+        const user = userInput.value.trim();
+        const pass = passInput.value.trim();
+
+        if (!user || !pass) {
+          authMsg.textContent = "ユーザー名とパスワードを入力してください。";
+          authMsg.className = "error";
+          return;
+        }
+
+        BASIC_USER = user;
+        BASIC_PASS = pass;
+        localStorage.setItem(BASIC_USER_KEY, BASIC_USER);
+        localStorage.setItem(BASIC_PASS_KEY, BASIC_PASS);
+
+        authArea.classList.add("hidden");
+        authMsg.textContent = "";
+        await loadStats();
+        await loadTexts("all");
       });
     }
 
     async function init() {
-      loadConfig();
       bindEvents();
       updateKindUI();
       resetCurrentDisplay();
 
-      const { apiBase, basicUser, basicPass } = getConfig();
-      if (apiBase && basicUser && basicPass) {
-        await loadStats();
-        await loadTexts("all");
+      if (!BASIC_USER || !BASIC_PASS) {
+        authArea.classList.remove("hidden");
+        return;
       }
+
+      authArea.classList.add("hidden");
+      await loadStats();
+      await loadTexts("all");
     }
 
     init();
