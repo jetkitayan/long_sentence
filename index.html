@@ -373,6 +373,10 @@
     
         const data = await apiFetch("/api/read-timer/texts", {
           method: "POST",
+          body: JSON.stringify({
+            kind: "excerpt",
+            content,
+            source_text_id: null,
           }),
         });
     
