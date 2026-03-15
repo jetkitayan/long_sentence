@@ -455,6 +455,8 @@
         el.readingState.textContent = "計測中";
         el.doneBtn.disabled = false;
         el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
+
+        await loadStats();
       } catch (err) {
         resetCurrentDisplay();
         el.readingMsg.textContent = "ランダム取得失敗: " + err.message;
@@ -499,7 +501,13 @@
 
     async function loadStats() {
       try {
-        const data = await apiFetch("/api/read-timer/stats");
+        let path = "/api/read-timer/stats";
+    
+        if (state.currentText?.id) {
+          path += `?text_id=${encodeURIComponent(state.currentText.id)}`;
+        }
+    
+        const data = await apiFetch(path);
 
         el.minElapsed.textContent = formatMs(data.min_elapsed_ms);
         const recent3 = Array.isArray(data.recent3) ? data.recent3 : [];
