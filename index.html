@@ -405,10 +405,11 @@
       state.currentText = null;
       state.startedAt = null;
       el.displayContent.textContent = "";
+      el.currentReadingText.innerHTML = "";
       el.readingState.textContent = "未開始";
       el.doneBtn.disabled = true;
     }
-        
+    
     async function createText() {
       el.createMsg.textContent = "";
       el.createMsg.className = "muted";
