@@ -300,10 +300,7 @@
       excerptContent: document.getElementById("excerptContent"),
       createExcerptBtn: document.getElementById("createExcerptBtn"),
       createExcerptMsg: document.getElementById("createExcerptMsg"),
-    
-      loadTextsBtn: document.getElementById("loadTextsBtn"),
-      loadStatsBtn: document.getElementById("loadStatsBtn"),
-    
+        
       readingState: document.getElementById("readingState"),
       displayContent: document.getElementById("displayContent"),
       doneBtn: document.getElementById("doneBtn"),
@@ -662,7 +659,6 @@
 
     async function init() {
       bindEvents();
-      updateKindUI();
       resetCurrentDisplay();
 
       if (!BASIC_USER || !BASIC_PASS) {
