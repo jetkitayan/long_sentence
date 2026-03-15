@@ -188,10 +188,6 @@
     <section class="card">
       <h2>接続設定</h2>
       <div class="grid">
-        <div>
-          <label for="apiBase">API Base URL</label>
-          <input id="apiBase" type="text" placeholder="https://xxxxx.workers.dev" />
-        </div>
 
         <div class="grid-2">
           <div>
@@ -392,9 +388,11 @@
       return d.toLocaleString("ja-JP");
     }
 
+    const API_BASE = "https://あなたのworker-url.workers.dev";
+    
     function getConfig() {
       return {
-        apiBase: el.apiBase.value.trim().replace(/\/+$/, ""),
+        apiBase: API_BASE,
         basicUser: el.basicUser.value,
         basicPass: el.basicPass.value,
       };
