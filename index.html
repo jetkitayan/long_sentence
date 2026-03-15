@@ -615,9 +615,6 @@
       el.createExcerptBtn?.addEventListener("click", createExcerptText);
       el.doneBtn?.addEventListener("click", finishReading);
     
-      el.loadStatsBtn?.addEventListener("click", loadStats);
-      el.loadTextsBtn?.addEventListener("click", () => loadTexts(state.currentListKind));
-    
       document.querySelectorAll("[data-random-kind]").forEach(btn => {
         btn.addEventListener("click", () => randomText(btn.dataset.randomKind));
       });
