@@ -507,14 +507,14 @@
           return;
         }
 
-        el.recent3List.innerHTML = recent3.map(item => `
-          <div class="list-item">
-            <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
-            <div><strong>text_id:</strong> <span class="mono">${escapeHtml(item.text_id)}</span></div>
-            <div><strong>時間:</strong> ${escapeHtml(formatMs(item.elapsed_ms))}</div>
-            <div><strong>保存日時:</strong> ${escapeHtml(formatDateTime(item.created_at))}</div>
-          </div>
-        `).join("");
+        el.recent3List.innerHTML = recent3.map(item => {
+          return `
+            <div class="list-item">
+              <div><strong>時間:</strong> ${escapeHtml(formatMs(item.elapsed_ms))}</div>
+              <div><strong>保存日時:</strong> ${escapeHtml(formatDateTime(item.created_at))}</div>
+            </div>
+          `;
+        }).join("");
       } catch (err) {
         el.recent3List.innerHTML = `<div class="error">統計取得失敗: ${escapeHtml(err.message)}</div>`;
       }
