@@ -256,6 +256,8 @@
       <div style="margin-top:12px;">
         <label>直近3回</label>
         <div id="recent3List" class="list"></div>
+        <label>現在読んでいる文章</label>
+        <div id="currentReadingText" class="list-item"></div>
       </div>
     </section>
 
@@ -307,6 +309,7 @@
       recent3List: document.getElementById("recent3List"),
     
       textsList: document.getElementById("textsList"),
+      currentReadingText: document.getElementById("currentReadingText"),
     };
 
     const state = {
