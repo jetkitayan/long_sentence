@@ -185,6 +185,11 @@
   </header>
 
   <main>
+    <div id="authArea">
+      <input id="basicUserInput" placeholder="Basic User">
+      <input id="basicPassInput" type="password" placeholder="Basic Pass">
+      <button id="saveAuthBtn">保存</button>
+    </div>
     <section class="card">
       <h2>文章登録</h2>
       <div class="grid">
@@ -295,6 +300,25 @@
   </main>
 
   <script>
+    const authArea = document.getElementById("authArea");
+    const userInput = document.getElementById("basicUserInput");
+    const passInput = document.getElementById("basicPassInput");
+    const saveBtn = document.getElementById("saveAuthBtn");
+    
+    if (BASIC_USER && BASIC_PASS) {
+      authArea.style.display = "none";
+    }
+    
+    saveBtn.onclick = () => {
+      BASIC_USER = userInput.value.trim();
+      BASIC_PASS = passInput.value.trim();
+    
+      localStorage.setItem("basic_user", BASIC_USER);
+      localStorage.setItem("basic_pass", BASIC_PASS);
+    
+      authArea.style.display = "none";
+    };
+        
     const STORAGE_KEY = "read_timer_config_v1";
 
     const el = {
