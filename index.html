@@ -504,24 +504,26 @@
     }
 
     async function loadStats() {
+      if (!state.currentText?.id) {
+        el.minElapsed.textContent = "-";
+        el.recentCount.textContent = "0";
+        el.recent3List.innerHTML = `<div class="muted">先にランダム表示してください。</div>`;
+        return;
+      }
+    
       try {
-        let path = "/api/read-timer/stats";
-    
-        if (state.currentText?.id) {
-          path += `?text_id=${encodeURIComponent(state.currentText.id)}`;
-        }
-    
+        const path = `/api/read-timer/stats?text_id=${encodeURIComponent(state.currentText.id)}`;
         const data = await apiFetch(path);
-
+    
         el.minElapsed.textContent = formatMs(data.min_elapsed_ms);
         const recent3 = Array.isArray(data.recent3) ? data.recent3 : [];
         el.recentCount.textContent = String(recent3.length);
-
+    
         if (recent3.length === 0) {
           el.recent3List.innerHTML = `<div class="muted">まだ記録がありません。</div>`;
           return;
         }
-
+    
         el.recent3List.innerHTML = recent3.map(item => {
           return `
             <div class="list-item">
