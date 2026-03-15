@@ -292,14 +292,17 @@
     const authMsg = document.getElementById("authMsg");
 
     const el = {
-      kind: document.getElementById("kind"),
-      sourceTextIdWrap: document.getElementById("sourceTextIdWrap"),
-      sourceTextId: document.getElementById("sourceTextId"),
-      content: document.getElementById("content"),
-      createTextBtn: document.getElementById("createTextBtn"),
+      fullContent: document.getElementById("fullContent"),
+      createFullBtn: document.getElementById("createFullBtn"),
+      createFullMsg: document.getElementById("createFullMsg"),
+    
+      excerptSourceTextId: document.getElementById("excerptSourceTextId"),
+      excerptContent: document.getElementById("excerptContent"),
+      createExcerptBtn: document.getElementById("createExcerptBtn"),
+      createExcerptMsg: document.getElementById("createExcerptMsg"),
+    
       loadTextsBtn: document.getElementById("loadTextsBtn"),
       loadStatsBtn: document.getElementById("loadStatsBtn"),
-      createMsg: document.getElementById("createMsg"),
     
       readingState: document.getElementById("readingState"),
       displayContent: document.getElementById("displayContent"),
@@ -313,7 +316,7 @@
     
       textsList: document.getElementById("textsList"),
     };
-
+        
     const state = {
       currentText: null,
       startedAt: null,
@@ -336,6 +339,72 @@
       return sec.toFixed(2) + " 秒";
     }
 
+    async function createFullText() {
+      el.createFullMsg.textContent = "";
+      el.createFullMsg.className = "muted";
+    
+      try {
+        const content = el.fullContent.value.trim();
+        if (!content) {
+          throw new Error("本文を入力してください");
+        }
+    
+        const data = await apiFetch("/api/read-timer/texts", {
+          method: "POST",
+          body: JSON.stringify({
+            kind: "full",
+            content,
+            source_text_id: null,
+          }),
+        });
+    
+        el.createFullMsg.textContent = `本文を登録しました。ID: ${data.text?.id ?? "-"}`;
+        el.createFullMsg.className = "success";
+        el.fullContent.value = "";
+    
+        await loadTexts(state.currentListKind);
+      } catch (err) {
+        el.createFullMsg.textContent = "登録失敗: " + err.message;
+        el.createFullMsg.className = "error";
+      }
+    }
+
+    async function createExcerptText() {
+      el.createExcerptMsg.textContent = "";
+      el.createExcerptMsg.className = "muted";
+    
+      try {
+        const sourceTextId = Number(el.excerptSourceTextId.value);
+        const content = el.excerptContent.value.trim();
+    
+        if (!Number.isFinite(sourceTextId)) {
+          throw new Error("抜粋元本文IDを入力してください");
+        }
+        if (!content) {
+          throw new Error("抜粋内容を入力してください");
+        }
+    
+        const data = await apiFetch("/api/read-timer/texts", {
+          method: "POST",
+          body: JSON.stringify({
+            kind: "excerpt",
+            content,
+            source_text_id: sourceTextId,
+          }),
+        });
+    
+        el.createExcerptMsg.textContent = `抜粋を登録しました。ID: ${data.text?.id ?? "-"}`;
+        el.createExcerptMsg.className = "success";
+        el.excerptSourceTextId.value = "";
+        el.excerptContent.value = "";
+    
+        await loadTexts(state.currentListKind);
+      } catch (err) {
+        el.createExcerptMsg.textContent = "登録失敗: " + err.message;
+        el.createExcerptMsg.className = "error";
+      }
+    }
+    
     function formatDateTime(s) {
       if (!s) return "-";
       const d = new Date(s);
@@ -398,11 +467,6 @@
       return data;
     }
 
-    function updateKindUI() {
-      const isExcerpt = el.kind.value === "excerpt";
-      el.sourceTextIdWrap.classList.toggle("hidden", !isExcerpt);
-    }
-
     function resetCurrentDisplay() {
       state.currentText = null;
       state.startedAt = null;
@@ -411,37 +475,6 @@
       el.doneBtn.disabled = true;
     }
     
-    async function createText() {
-      el.createMsg.textContent = "";
-      el.createMsg.className = "muted";
-
-      try {
-        const body = {
-          kind: el.kind.value,
-          content: el.content.value.trim(),
-          source_text_id: el.kind.value === "excerpt"
-            ? (el.sourceTextId.value.trim() === "" ? null : Number(el.sourceTextId.value))
-            : null,
-        };
-
-        const data = await apiFetch("/api/read-timer/texts", {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
-
-        el.createMsg.textContent = `登録しました。ID: ${data.text?.id ?? "-"}`;
-        el.createMsg.className = "success";
-
-        el.content.value = "";
-        el.sourceTextId.value = "";
-
-        await loadTexts(state.currentListKind);
-      } catch (err) {
-        el.createMsg.textContent = "登録失敗: " + err.message;
-        el.createMsg.className = "error";
-      }
-    }
-
     async function randomText(kind) {
       el.readingMsg.textContent = "";
       el.readingMsg.className = "muted";
@@ -538,16 +571,16 @@
     async function loadTexts(kind = "all") {
       state.currentListKind = kind;
       el.textsList.innerHTML = `<div class="muted">読み込み中...</div>`;
-
+    
       try {
         const data = await apiFetch(`/api/read-timer/texts?kind=${encodeURIComponent(kind)}&limit=100`);
         const texts = Array.isArray(data.texts) ? data.texts : [];
-
+    
         if (texts.length === 0) {
           el.textsList.innerHTML = `<div class="muted">データがありません。</div>`;
           return;
         }
-
+    
         el.textsList.innerHTML = texts.map(item => `
           <div class="list-item">
             <div>${escapeHtml(item.content || "")}</div>
@@ -555,16 +588,44 @@
               作成: ${escapeHtml(formatDateTime(item.created_at))}<br>
               更新: ${escapeHtml(formatDateTime(item.updated_at))}
             </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="delete-text-btn" data-id="${item.id}">削除</button>
+            </div>
           </div>
         `).join("");
+    
+        document.querySelectorAll(".delete-text-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.id;
+            if (!confirm("この文章を削除しますか？")) return;
+    
+            try {
+              await apiFetch(`/api/read-timer/texts/${encodeURIComponent(id)}`, {
+                method: "DELETE",
+              });
+    
+              if (state.currentText?.id && String(state.currentText.id) === String(id)) {
+                resetCurrentDisplay();
+                el.currentElapsed.textContent = "-";
+                el.minElapsed.textContent = "-";
+                el.recentCount.textContent = "0";
+                el.recent3List.innerHTML = `<div class="muted">まだ記録がありません。</div>`;
+              }
+    
+              await loadTexts(state.currentListKind);
+            } catch (err) {
+              alert("削除失敗: " + err.message);
+            }
+          });
+        });
+    
       } catch (err) {
         el.textsList.innerHTML = `<div class="error">一覧取得失敗: ${escapeHtml(err.message)}</div>`;
       }
     }
-
     function bindEvents() {
-      el.kind.addEventListener("change", updateKindUI);
-      el.createTextBtn.addEventListener("click", createText);
+      el.createFullBtn.addEventListener("click", createFullText);
+      el.createExcerptBtn.addEventListener("click", createExcerptText);
       el.doneBtn.addEventListener("click", finishReading);
       el.loadStatsBtn.addEventListener("click", loadStats);
       el.loadTextsBtn.addEventListener("click", () => loadTexts(state.currentListKind));
