@@ -295,19 +295,17 @@
       loadTextsBtn: document.getElementById("loadTextsBtn"),
       loadStatsBtn: document.getElementById("loadStatsBtn"),
       createMsg: document.getElementById("createMsg"),
-
-      currentTextId: document.getElementById("currentTextId"),
-      currentTextKind: document.getElementById("currentTextKind"),
+    
       readingState: document.getElementById("readingState"),
       displayContent: document.getElementById("displayContent"),
       doneBtn: document.getElementById("doneBtn"),
       readingMsg: document.getElementById("readingMsg"),
-
+    
       currentElapsed: document.getElementById("currentElapsed"),
       minElapsed: document.getElementById("minElapsed"),
       recentCount: document.getElementById("recentCount"),
       recent3List: document.getElementById("recent3List"),
-
+    
       textsList: document.getElementById("textsList"),
     };
 
@@ -403,13 +401,11 @@
     function resetCurrentDisplay() {
       state.currentText = null;
       state.startedAt = null;
-      el.currentTextId.textContent = "-";
-      el.currentTextKind.textContent = "-";
       el.displayContent.textContent = "";
       el.readingState.textContent = "未開始";
       el.doneBtn.disabled = true;
     }
-
+        
     async function createText() {
       el.createMsg.textContent = "";
       el.createMsg.className = "muted";
@@ -451,9 +447,7 @@
 
         state.currentText = item;
         state.startedAt = new Date().toISOString();
-
-        el.currentTextId.textContent = item?.id ?? "-";
-        el.currentTextKind.textContent = item?.kind ?? "-";
+        
         el.displayContent.textContent = item?.content || "";
         el.readingState.textContent = "計測中";
         el.doneBtn.disabled = false;
