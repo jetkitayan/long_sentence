@@ -332,7 +332,6 @@
       kind: document.getElementById("kind"),
       sourceTextIdWrap: document.getElementById("sourceTextIdWrap"),
       sourceTextId: document.getElementById("sourceTextId"),
-      title: document.getElementById("title"),
       content: document.getElementById("content"),
       createTextBtn: document.getElementById("createTextBtn"),
       loadTextsBtn: document.getElementById("loadTextsBtn"),
@@ -477,7 +476,6 @@
       try {
         const body = {
           kind: el.kind.value,
-          title: el.title.value.trim(),
           content: el.content.value.trim(),
           source_text_id: el.kind.value === "excerpt"
             ? (el.sourceTextId.value.trim() === "" ? null : Number(el.sourceTextId.value))
@@ -492,7 +490,6 @@
         el.createMsg.textContent = `登録しました。ID: ${data.text?.id ?? "-"}`;
         el.createMsg.className = "success";
 
-        el.title.value = "";
         el.content.value = "";
         el.sourceTextId.value = "";
 
@@ -610,7 +607,6 @@
             <div class="list-item">
               <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
               <div><strong>種別:</strong> ${escapeHtml(item.kind)}</div>
-              <div><strong>タイトル:</strong> ${escapeHtml(item.title || "(タイトルなし)")}</div>
               <div><strong>抜粋元本文ID:</strong> ${escapeHtml(item.source_text_id ?? "-")}</div>
               <div><strong>内容:</strong><br>${escapeHtml(item.content || "")}</div>
               <div class="muted" style="margin-top:6px;">
