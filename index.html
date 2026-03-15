@@ -609,39 +609,40 @@
         el.textsList.innerHTML = `<div class="error">一覧取得失敗: ${escapeHtml(err.message)}</div>`;
       }
     }
-    function bindEvents() {
-      el.createFullBtn.addEventListener("click", createFullText);
-      el.createExcerptBtn.addEventListener("click", createExcerptText);
-      el.doneBtn.addEventListener("click", finishReading);
-      el.loadStatsBtn.addEventListener("click", loadStats);
-      el.loadTextsBtn.addEventListener("click", () => loadTexts(state.currentListKind));
 
+    function bindEvents() {
+      el.createFullBtn?.addEventListener("click", createFullText);
+      el.createExcerptBtn?.addEventListener("click", createExcerptText);
+      el.doneBtn?.addEventListener("click", finishReading);
+    
+      el.loadStatsBtn?.addEventListener("click", loadStats);
+      el.loadTextsBtn?.addEventListener("click", () => loadTexts(state.currentListKind));
+    
       document.querySelectorAll("[data-random-kind]").forEach(btn => {
         btn.addEventListener("click", () => randomText(btn.dataset.randomKind));
       });
-
+    
       document.querySelectorAll("[data-list-kind]").forEach(btn => {
         btn.addEventListener("click", () => loadTexts(btn.dataset.listKind));
       });
-
-      saveAuthBtn.addEventListener("click", async () => {
+    
+      saveAuthBtn?.addEventListener("click", async () => {
         const user = userInput.value.trim();
         const pass = passInput.value.trim();
-
+    
         if (!user || !pass) {
           authMsg.textContent = "ユーザー名とパスワードを入力してください。";
           authMsg.className = "error";
           return;
         }
-
+    
         BASIC_USER = user;
         BASIC_PASS = pass;
         localStorage.setItem(BASIC_USER_KEY, BASIC_USER);
         localStorage.setItem(BASIC_PASS_KEY, BASIC_PASS);
-
+    
         authArea.classList.add("hidden");
         authMsg.textContent = "";
-        await loadStats();
         await loadTexts("all");
       });
     }
@@ -649,17 +650,16 @@
     async function init() {
       bindEvents();
       resetCurrentDisplay();
-
+    
       if (!BASIC_USER || !BASIC_PASS) {
         authArea.classList.remove("hidden");
         return;
       }
-
+    
       authArea.classList.add("hidden");
-      await loadStats();
       await loadTexts("all");
     }
-
+    
     init();
   </script>
 </body>
