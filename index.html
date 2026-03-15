@@ -453,6 +453,9 @@
         state.startedAt = new Date().toISOString();
         
         el.displayContent.textContent = item?.content || "";
+        el.currentReadingText.innerHTML = `
+          <div>${escapeHtml(item?.content || "")}</div>
+        `;
         el.readingState.textContent = "計測中";
         el.doneBtn.disabled = false;
         el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
