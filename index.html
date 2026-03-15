@@ -176,37 +176,42 @@
     </div>
 
     <section class="card">
-      <h2>文章登録</h2>
+      <h2>本文登録</h2>
       <div class="grid">
-        <div class="grid-2">
-          <div>
-            <label for="kind">種別</label>
-            <select id="kind">
-              <option value="full">本文</option>
-              <option value="excerpt">抜粋</option>
-            </select>
-          </div>
-          <div id="sourceTextIdWrap" class="hidden">
-            <label for="sourceTextId">抜粋元本文ID</label>
-            <input id="sourceTextId" type="number" placeholder="例: 1" />
-          </div>
-        </div>
-
         <div>
-          <label for="content">本文 / 抜粋内容</label>
-          <textarea id="content" placeholder="ここに文章を入力"></textarea>
+          <label for="fullContent">本文</label>
+          <textarea id="fullContent" placeholder="本文を入力"></textarea>
         </div>
-
+    
         <div class="row">
-          <button id="createTextBtn">登録</button>
-          <button id="loadTextsBtn">一覧を再取得</button>
-          <button id="loadStatsBtn">統計を再取得</button>
+          <button id="createFullBtn">本文を登録</button>
         </div>
-
-        <div id="createMsg" class="muted"></div>
+    
+        <div id="createFullMsg" class="muted"></div>
       </div>
     </section>
 
+    <section class="card">
+      <h2>抜粋登録</h2>
+      <div class="grid">
+        <div>
+          <label for="excerptSourceTextId">抜粋元本文ID</label>
+          <input id="excerptSourceTextId" type="number" placeholder="例: 1" />
+        </div>
+    
+        <div>
+          <label for="excerptContent">抜粋内容</label>
+          <textarea id="excerptContent" placeholder="抜粋を入力"></textarea>
+        </div>
+    
+        <div class="row">
+          <button id="createExcerptBtn">抜粋を登録</button>
+        </div>
+    
+        <div id="createExcerptMsg" class="muted"></div>
+      </div>
+    </section>
+    
     <section class="card">
       <h2>ランダム表示</h2>
       <div class="grid">
