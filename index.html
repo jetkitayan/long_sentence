@@ -256,8 +256,6 @@
       <div style="margin-top:12px;">
         <label>直近3回</label>
         <div id="recent3List" class="list"></div>
-        <label>現在読んでいる文章</label>
-        <div id="currentReadingText" class="list-item"></div>
       </div>
     </section>
 
@@ -309,7 +307,6 @@
       recent3List: document.getElementById("recent3List"),
     
       textsList: document.getElementById("textsList"),
-      currentReadingText: document.getElementById("currentReadingText"),
     };
 
     const state = {
@@ -405,7 +402,6 @@
       state.currentText = null;
       state.startedAt = null;
       el.displayContent.textContent = "";
-      el.currentReadingText.innerHTML = "";
       el.readingState.textContent = "未開始";
       el.doneBtn.disabled = true;
     }
@@ -453,9 +449,6 @@
         state.startedAt = new Date().toISOString();
         
         el.displayContent.textContent = item?.content || "";
-        el.currentReadingText.innerHTML = `
-          <div>${escapeHtml(item?.content || "")}</div>
-        `;
         el.readingState.textContent = "計測中";
         el.doneBtn.disabled = false;
         el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
