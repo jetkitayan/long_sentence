@@ -227,10 +227,6 @@
           <label>文章</label>
           <div id="displayContent" class="output-box"></div>
         </div>
-
-        <div class="row">
-          <button id="doneBtn" disabled>文章読解完了</button>
-        </div>
         
         <div class="row">
           <button id="doneBtn" disabled>文章読解完了</button>
@@ -259,7 +255,7 @@
       </div>
 
       <div style="margin-top:12px;">
-        <label>直近3回</label>
+        <label>直近5回</label>
         <div id="recent3List" class="list"></div>
       </div>
     </section>
@@ -311,6 +307,7 @@
       recent3List: document.getElementById("recent3List"),
     
       textsList: document.getElementById("textsList"),
+      clearStatsBtn: document.getElementById("clearStatsBtn"),
     };
         
     const state = {
@@ -464,6 +461,33 @@
       el.displayContent.textContent = "";
       el.readingState.textContent = "未開始";
       el.doneBtn.disabled = true;
+      el.clearStatsBtn.disabled = true;
+    }
+
+    async function clearCurrentStats() {
+      if (!state.currentText?.id) {
+        el.readingMsg.textContent = "先にランダム表示してください。";
+        el.readingMsg.className = "error";
+        return;
+      }
+    
+      if (!confirm("この文章の読解統計をクリアしますか？")) return;
+    
+      try {
+        await apiFetch(`/api/read-timer/logs/${encodeURIComponent(state.currentText.id)}`, {
+          method: "DELETE",
+        });
+    
+        el.currentElapsed.textContent = "-";
+        el.minElapsed.textContent = "-";
+        el.recentCount.textContent = "0";
+        el.recent3List.innerHTML = `<div class="muted">まだ記録がありません。</div>`;
+        el.readingMsg.textContent = "この文章の統計をクリアしました。";
+        el.readingMsg.className = "success";
+      } catch (err) {
+        el.readingMsg.textContent = "統計クリア失敗: " + err.message;
+        el.readingMsg.className = "error";
+      }
     }
     
     async function randomText(kind) {
@@ -479,8 +503,9 @@
         
         el.displayContent.textContent = item?.content || "";
         el.readingState.textContent = "計測中";
-        el.doneBtn.disabled = false;
         el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
+        el.doneBtn.disabled = false;
+        el.clearStatsBtn.disabled = false;
 
         await loadStats();
       } catch (err) {
@@ -619,7 +644,8 @@
       el.createFullBtn?.addEventListener("click", createFullText);
       el.createExcerptBtn?.addEventListener("click", createExcerptText);
       el.doneBtn?.addEventListener("click", finishReading);
-    
+      el.clearStatsBtn?.addEventListener("click", clearCurrentStats);
+      
       document.querySelectorAll("[data-random-kind]").forEach(btn => {
         btn.addEventListener("click", () => randomText(btn.dataset.randomKind));
       });
