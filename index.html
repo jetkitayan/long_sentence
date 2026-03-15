@@ -535,10 +535,7 @@
 
         el.textsList.innerHTML = texts.map(item => `
           <div class="list-item">
-            <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
-            <div><strong>種別:</strong> ${escapeHtml(item.kind)}</div>
-            <div><strong>抜粋元本文ID:</strong> ${escapeHtml(item.source_text_id ?? "-")}</div>
-            <div><strong>内容:</strong><br>${escapeHtml(item.content || "")}</div>
+            <div>${escapeHtml(item.content || "")}</div>
             <div class="muted" style="margin-top:6px;">
               作成: ${escapeHtml(formatDateTime(item.created_at))}<br>
               更新: ${escapeHtml(formatDateTime(item.updated_at))}
