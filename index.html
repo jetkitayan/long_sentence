@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read Timer</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f7f7f8;
+      color: #222;
+      line-height: 1.5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 16px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-3 {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #cfd5dd;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 16px;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      border: 1px solid #cfd5dd;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f3f4f6;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .output-box {
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fafafa;
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .stat {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .stat-title {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .list-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+    }
+
+    .error {
+      color: #b00020;
+      font-weight: 600;
+    }
+
+    .success {
+      color: #0a7a35;
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Read Timer</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>接続設定</h2>
+      <div class="grid">
+        <div>
+          <label for="apiBase">API Base URL</label>
+          <input id="apiBase" type="text" placeholder="https://xxxxx.workers.dev" />
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label for="basicUser">Basic User</label>
+            <input id="basicUser" type="text" placeholder="Basic認証ユーザー" />
+          </div>
+          <div>
+            <label for="basicPass">Basic Pass</label>
+            <input id="basicPass" type="password" placeholder="Basic認証パスワード" />
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="saveConfigBtn">設定を保存</button>
+          <button id="loadStatsBtn">統計を再取得</button>
+        </div>
+
+        <div id="configMsg" class="muted"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>文章登録</h2>
+      <div class="grid">
+        <div class="grid-2">
+          <div>
+            <label for="kind">種別</label>
+            <select id="kind">
+              <option value="full">本文</option>
+              <option value="excerpt">抜粋</option>
+            </select>
+          </div>
+          <div id="sourceTextIdWrap" class="hidden">
+            <label for="sourceTextId">抜粋元本文ID</label>
+            <input id="sourceTextId" type="number" placeholder="例: 1" />
+          </div>
+        </div>
+
+        <div>
+          <label for="title">タイトル</label>
+          <input id="title" type="text" placeholder="任意" />
+        </div>
+
+        <div>
+          <label for="content">本文 / 抜粋内容</label>
+          <textarea id="content" placeholder="ここに文章を入力"></textarea>
+        </div>
+
+        <div class="row">
+          <button id="createTextBtn">登録</button>
+          <button id="loadTextsBtn">一覧を再取得</button>
+        </div>
+
+        <div id="createMsg" class="muted"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>ランダム表示</h2>
+      <div class="grid">
+        <div class="row">
+          <button data-random-kind="full">本文ランダム</button>
+          <button data-random-kind="excerpt">抜粋ランダム</button>
+          <button data-random-kind="all">全文/抜粋ランダム</button>
+        </div>
+
+        <div class="grid-3">
+          <div class="stat">
+            <div class="stat-title">現在のID</div>
+            <div id="currentTextId" class="stat-value mono">-</div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">現在の種別</div>
+            <div id="currentTextKind" class="stat-value">-</div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">計測状態</div>
+            <div id="readingState" class="stat-value" style="font-size:18px;">未開始</div>
+          </div>
+        </div>
+
+        <div>
+          <label>タイトル</label>
+          <div id="displayTitle" class="output-box"></div>
+        </div>
+
+        <div>
+          <label>文章</label>
+          <div id="displayContent" class="output-box"></div>
+        </div>
+
+        <div class="row">
+          <button id="doneBtn" disabled>文章読解完了</button>
+        </div>
+
+        <div id="readingMsg" class="muted"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>統計</h2>
+      <div class="grid-3">
+        <div class="stat">
+          <div class="stat-title">今回の時間</div>
+          <div id="currentElapsed" class="stat-value">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">最小時間</div>
+          <div id="minElapsed" class="stat-value">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">直近件数</div>
+          <div id="recentCount" class="stat-value">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>直近3回</label>
+        <div id="recent3List" class="list"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>登録済み文章一覧</h2>
+      <div class="grid">
+        <div class="row">
+          <button data-list-kind="all">全部</button>
+          <button data-list-kind="full">本文</button>
+          <button data-list-kind="excerpt">抜粋</button>
+        </div>
+        <div id="textsList" class="list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "read_timer_config_v1";
+
+    const el = {
+      apiBase: document.getElementById("apiBase"),
+      basicUser: document.getElementById("basicUser"),
+      basicPass: document.getElementById("basicPass"),
+      saveConfigBtn: document.getElementById("saveConfigBtn"),
+      loadStatsBtn: document.getElementById("loadStatsBtn"),
+      configMsg: document.getElementById("configMsg"),
+
+      kind: document.getElementById("kind"),
+      sourceTextIdWrap: document.getElementById("sourceTextIdWrap"),
+      sourceTextId: document.getElementById("sourceTextId"),
+      title: document.getElementById("title"),
+      content: document.getElementById("content"),
+      createTextBtn: document.getElementById("createTextBtn"),
+      loadTextsBtn: document.getElementById("loadTextsBtn"),
+      createMsg: document.getElementById("createMsg"),
+
+      currentTextId: document.getElementById("currentTextId"),
+      currentTextKind: document.getElementById("currentTextKind"),
+      readingState: document.getElementById("readingState"),
+      displayTitle: document.getElementById("displayTitle"),
+      displayContent: document.getElementById("displayContent"),
+      doneBtn: document.getElementById("doneBtn"),
+      readingMsg: document.getElementById("readingMsg"),
+
+      currentElapsed: document.getElementById("currentElapsed"),
+      minElapsed: document.getElementById("minElapsed"),
+      recentCount: document.getElementById("recentCount"),
+      recent3List: document.getElementById("recent3List"),
+
+      textsList: document.getElementById("textsList"),
+    };
+
+    const state = {
+      currentText: null,
+      startedAt: null,
+      currentListKind: "all",
+    };
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatMs(ms) {
+      if (ms === null || ms === undefined || ms === "") return "-";
+      const sec = Number(ms) / 1000;
+      if (!Number.isFinite(sec)) return "-";
+      return sec.toFixed(2) + " 秒";
+    }
+
+    function formatDateTime(s) {
+      if (!s) return "-";
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return String(s);
+      return d.toLocaleString("ja-JP");
+    }
+
+    function getConfig() {
+      return {
+        apiBase: el.apiBase.value.trim().replace(/\/+$/, ""),
+        basicUser: el.basicUser.value,
+        basicPass: el.basicPass.value,
+      };
+    }
+
+    function saveConfig() {
+      const cfg = getConfig();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+      el.configMsg.textContent = "設定を保存しました。";
+      el.configMsg.className = "success";
+    }
+
+    function loadConfig() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const cfg = JSON.parse(raw);
+        el.apiBase.value = cfg.apiBase || "";
+        el.basicUser.value = cfg.basicUser || "";
+        el.basicPass.value = cfg.basicPass || "";
+      } catch {}
+    }
+
+    function authHeader() {
+      const { basicUser, basicPass } = getConfig();
+      return "Basic " + btoa(`${basicUser}:${basicPass}`);
+    }
+
+    async function apiFetch(path, options = {}) {
+      const { apiBase } = getConfig();
+      if (!apiBase) {
+        throw new Error("API Base URL を入力してください");
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": authHeader(),
+        ...(options.headers || {}),
+      };
+
+      const res = await fetch(apiBase + path, {
+        ...options,
+        headers,
+      });
+
+      let data = null;
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        data = { raw: text };
+      }
+
+      if (!res.ok) {
+        const msg = data?.error || data?.detail || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      if (data && data.ok === false && data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    }
+
+    function updateKindUI() {
+      const isExcerpt = el.kind.value === "excerpt";
+      el.sourceTextIdWrap.classList.toggle("hidden", !isExcerpt);
+    }
+
+    function resetCurrentDisplay() {
+      state.currentText = null;
+      state.startedAt = null;
+      el.currentTextId.textContent = "-";
+      el.currentTextKind.textContent = "-";
+      el.displayTitle.textContent = "";
+      el.displayContent.textContent = "";
+      el.readingState.textContent = "未開始";
+      el.doneBtn.disabled = true;
+    }
+
+    async function createText() {
+      el.createMsg.textContent = "";
+      el.createMsg.className = "muted";
+
+      try {
+        const body = {
+          kind: el.kind.value,
+          title: el.title.value.trim(),
+          content: el.content.value.trim(),
+          source_text_id: el.kind.value === "excerpt"
+            ? (el.sourceTextId.value.trim() === "" ? null : Number(el.sourceTextId.value))
+            : null,
+        };
+
+        const data = await apiFetch("/api/read-timer/texts", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+
+        el.createMsg.textContent = `登録しました。ID: ${data.text?.id ?? "-"}`;
+        el.createMsg.className = "success";
+
+        el.title.value = "";
+        el.content.value = "";
+        el.sourceTextId.value = "";
+
+        await loadTexts(state.currentListKind);
+      } catch (err) {
+        el.createMsg.textContent = "登録失敗: " + err.message;
+        el.createMsg.className = "error";
+      }
+    }
+
+    async function randomText(kind) {
+      el.readingMsg.textContent = "";
+      el.readingMsg.className = "muted";
+
+      try {
+        const data = await apiFetch(`/api/read-timer/texts/random?kind=${encodeURIComponent(kind)}`);
+
+        const item = data.text;
+        state.currentText = item;
+        state.startedAt = new Date().toISOString();
+
+        el.currentTextId.textContent = item?.id ?? "-";
+        el.currentTextKind.textContent = item?.kind ?? "-";
+        el.displayTitle.textContent = item?.title || "(タイトルなし)";
+        el.displayContent.textContent = item?.content || "";
+        el.readingState.textContent = "計測中";
+        el.doneBtn.disabled = false;
+
+        el.readingMsg.textContent = "文章を表示しました。読解完了で記録します。";
+      } catch (err) {
+        resetCurrentDisplay();
+        el.readingMsg.textContent = "ランダム取得失敗: " + err.message;
+        el.readingMsg.className = "error";
+      }
+    }
+
+    async function finishReading() {
+      if (!state.currentText || !state.startedAt) {
+        el.readingMsg.textContent = "先にランダム表示してください。";
+        el.readingMsg.className = "error";
+        return;
+      }
+
+      try {
+        const finishedAt = new Date().toISOString();
+
+        const data = await apiFetch("/api/read-timer/logs", {
+          method: "POST",
+          body: JSON.stringify({
+            text_id: state.currentText.id,
+            started_at: state.startedAt,
+            finished_at: finishedAt,
+          }),
+        });
+
+        const elapsedMs = data.log?.elapsed_ms ?? null;
+        el.currentElapsed.textContent = formatMs(elapsedMs);
+        el.readingState.textContent = "完了";
+        el.doneBtn.disabled = true;
+        el.readingMsg.textContent = "読解時間を保存しました。";
+        el.readingMsg.className = "success";
+
+        state.startedAt = null;
+
+        await loadStats();
+      } catch (err) {
+        el.readingMsg.textContent = "保存失敗: " + err.message;
+        el.readingMsg.className = "error";
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const data = await apiFetch("/api/read-timer/stats");
+
+        el.minElapsed.textContent = formatMs(data.min_elapsed_ms);
+        const recent3 = Array.isArray(data.recent3) ? data.recent3 : [];
+        el.recentCount.textContent = String(recent3.length);
+
+        if (recent3.length === 0) {
+          el.recent3List.innerHTML = `<div class="muted">まだ記録がありません。</div>`;
+          return;
+        }
+
+        el.recent3List.innerHTML = recent3.map(item => {
+          return `
+            <div class="list-item">
+              <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
+              <div><strong>text_id:</strong> <span class="mono">${escapeHtml(item.text_id)}</span></div>
+              <div><strong>時間:</strong> ${escapeHtml(formatMs(item.elapsed_ms))}</div>
+              <div><strong>保存日時:</strong> ${escapeHtml(formatDateTime(item.created_at))}</div>
+            </div>
+          `;
+        }).join("");
+      } catch (err) {
+        el.recent3List.innerHTML = `<div class="error">統計取得失敗: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function loadTexts(kind = "all") {
+      state.currentListKind = kind;
+      el.textsList.innerHTML = `<div class="muted">読み込み中...</div>`;
+
+      try {
+        const data = await apiFetch(`/api/read-timer/texts?kind=${encodeURIComponent(kind)}&limit=100`);
+        const texts = Array.isArray(data.texts) ? data.texts : [];
+
+        if (texts.length === 0) {
+          el.textsList.innerHTML = `<div class="muted">データがありません。</div>`;
+          return;
+        }
+
+        el.textsList.innerHTML = texts.map(item => {
+          return `
+            <div class="list-item">
+              <div><strong>ID:</strong> <span class="mono">${escapeHtml(item.id)}</span></div>
+              <div><strong>種別:</strong> ${escapeHtml(item.kind)}</div>
+              <div><strong>タイトル:</strong> ${escapeHtml(item.title || "(タイトルなし)")}</div>
+              <div><strong>抜粋元本文ID:</strong> ${escapeHtml(item.source_text_id ?? "-")}</div>
+              <div><strong>内容:</strong><br>${escapeHtml(item.content || "")}</div>
+              <div class="muted" style="margin-top:6px;">
+                作成: ${escapeHtml(formatDateTime(item.created_at))}<br>
+                更新: ${escapeHtml(formatDateTime(item.updated_at))}
+              </div>
+            </div>
+          `;
+        }).join("");
+      } catch (err) {
+        el.textsList.innerHTML = `<div class="error">一覧取得失敗: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function bindEvents() {
+      el.kind.addEventListener("change", updateKindUI);
+      el.saveConfigBtn.addEventListener("click", saveConfig);
+      el.createTextBtn.addEventListener("click", createText);
+      el.doneBtn.addEventListener("click", finishReading);
+      el.loadStatsBtn.addEventListener("click", loadStats);
+      el.loadTextsBtn.addEventListener("click", () => loadTexts(state.currentListKind));
+
+      document.querySelectorAll("[data-random-kind]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          randomText(btn.dataset.randomKind);
+        });
+      });
+
+      document.querySelectorAll("[data-list-kind]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          loadTexts(btn.dataset.listKind);
+        });
+      });
+    }
+
+    async function init() {
+      loadConfig();
+      bindEvents();
+      updateKindUI();
+      resetCurrentDisplay();
+
+      const { apiBase, basicUser, basicPass } = getConfig();
+      if (apiBase && basicUser && basicPass) {
+        await loadStats();
+        await loadTexts("all");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
