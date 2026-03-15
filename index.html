@@ -291,7 +291,6 @@
       createFullBtn: document.getElementById("createFullBtn"),
       createFullMsg: document.getElementById("createFullMsg"),
     
-      excerptSourceTextId: document.getElementById("excerptSourceTextId"),
       excerptContent: document.getElementById("excerptContent"),
       createExcerptBtn: document.getElementById("createExcerptBtn"),
       createExcerptMsg: document.getElementById("createExcerptMsg"),
@@ -366,12 +365,8 @@
       el.createExcerptMsg.className = "muted";
     
       try {
-        const sourceTextId = Number(el.excerptSourceTextId.value);
         const content = el.excerptContent.value.trim();
     
-        if (!Number.isFinite(sourceTextId)) {
-          throw new Error("抜粋元本文IDを入力してください");
-        }
         if (!content) {
           throw new Error("抜粋内容を入力してください");
         }
@@ -381,13 +376,12 @@
           body: JSON.stringify({
             kind: "excerpt",
             content,
-            source_text_id: sourceTextId,
+            source_text_id: null,
           }),
         });
     
         el.createExcerptMsg.textContent = `抜粋を登録しました。ID: ${data.text?.id ?? "-"}`;
         el.createExcerptMsg.className = "success";
-        el.excerptSourceTextId.value = "";
         el.excerptContent.value = "";
     
         await loadTexts(state.currentListKind);
